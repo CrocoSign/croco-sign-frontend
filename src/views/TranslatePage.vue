@@ -5,6 +5,7 @@ import type { Job, ModelInfo } from '@/api/types'
 
 const models = ref<ModelInfo[]>([])
 const selectedModel = ref('')
+const selectedLanguage = ref<'en' | 'pl'>('en')
 const videoFile = ref<File | null>(null)
 
 const job = ref<Job | null>(null)
@@ -45,7 +46,11 @@ async function onSubmit() {
   submitting.value = true
 
   try {
-    const accepted = await submitTranslation(selectedModel.value, videoFile.value)
+    const accepted = await submitTranslation(
+      selectedModel.value,
+      videoFile.value,
+      selectedLanguage.value,
+    )
     streamJob(accepted.job_id)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to submit translation.'
@@ -108,6 +113,14 @@ onUnmounted(closeStream)
           <option v-for="model in models" :key="model.name" :value="model.name">
             {{ model.name }}
           </option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Language</span>
+        <select v-model="selectedLanguage">
+          <option value="en">English</option>
+          <option value="pl">Polish</option>
         </select>
       </label>
 

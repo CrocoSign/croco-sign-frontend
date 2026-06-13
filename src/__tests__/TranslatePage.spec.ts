@@ -94,4 +94,27 @@ describe('TranslatePage', () => {
     expect(wrapper.text()).toContain('Hello world')
     expect(MockEventSource.last!.closed).toBe(true)
   })
+
+  it('submits the selected target language', async () => {
+    vi.mocked(listModels).mockResolvedValue([{ name: 'mock' }])
+    vi.mocked(submitTranslation).mockResolvedValue({
+      job_id: 'abc123',
+      status: 'pending',
+      status_url: 'http://localhost:8000/jobs/abc123',
+    })
+    const wrapper = mount(TranslatePage)
+    await flushPromises()
+
+    const file = new File(['data'], 'clip.mp4', { type: 'video/mp4' })
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', { value: [file] })
+    await input.trigger('change')
+
+    const selects = wrapper.findAll('select')
+    await selects[1]!.setValue('pl')
+
+    await wrapper.get('form').trigger('submit')
+
+    expect(vi.mocked(submitTranslation)).toHaveBeenCalledWith('mock', file, 'pl')
+  })
 })
