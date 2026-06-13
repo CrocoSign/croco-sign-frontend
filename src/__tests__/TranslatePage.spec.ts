@@ -17,11 +17,13 @@ import { listModels, submitTranslation } from '@/api/client'
 // Minimal EventSource stub that lets tests drive onmessage.
 class MockEventSource {
   static last: MockEventSource | null = null
+  static instances: MockEventSource[] = []
   onmessage: ((e: { data: string }) => void) | null = null
   onerror: (() => void) | null = null
   closed = false
   constructor(public url: string) {
     MockEventSource.last = this
+    MockEventSource.instances.push(this)
   }
   emit(job: Job) {
     this.onmessage?.({ data: JSON.stringify(job) })
@@ -49,6 +51,7 @@ describe('TranslatePage', () => {
     vi.mocked(listModels).mockReset()
     vi.mocked(submitTranslation).mockReset()
     MockEventSource.last = null
+    MockEventSource.instances = []
   })
 
   it('populates the model dropdown on mount', async () => {
@@ -56,7 +59,7 @@ describe('TranslatePage', () => {
     const wrapper = mount(TranslatePage)
     await flushPromises()
 
-    const options = wrapper.findAll('select option')
+    const options = wrapper.findAll('select')[0]!.findAll('option')
     expect(options).toHaveLength(1)
     expect(options[0]!.text()).toBe('mock')
   })
@@ -116,5 +119,62 @@ describe('TranslatePage', () => {
     await wrapper.get('form').trigger('submit')
 
     expect(vi.mocked(submitTranslation)).toHaveBeenCalledWith('mock', file, 'pl')
+  })
+
+  it('sends the video to two models and renders both results in advanced mode', async () => {
+    vi.mocked(listModels).mockResolvedValue([{ name: 'alpha' }, { name: 'beta' }])
+    vi.mocked(submitTranslation)
+      .mockResolvedValueOnce({
+        job_id: 'job-a',
+        status: 'pending',
+        status_url: 'http://localhost:8000/jobs/job-a',
+      })
+      .mockResolvedValueOnce({
+        job_id: 'job-b',
+        status: 'pending',
+        status_url: 'http://localhost:8000/jobs/job-b',
+      })
+    const wrapper = mount(TranslatePage)
+    await flushPromises()
+
+    // Turn on advanced (compare) mode.
+    await wrapper.get('input[type="checkbox"]').setValue(true)
+
+    // Model A = alpha (default), Model B = beta (default second model).
+    const selects = wrapper.findAll('select')
+    await selects[0]!.setValue('alpha')
+    await selects[1]!.setValue('beta')
+
+    const file = new File(['data'], 'clip.mp4', { type: 'video/mp4' })
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', { value: [file] })
+    await input.trigger('change')
+
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(vi.mocked(submitTranslation)).toHaveBeenCalledTimes(2)
+    expect(vi.mocked(submitTranslation)).toHaveBeenNthCalledWith(1, 'alpha', file, 'en')
+    expect(vi.mocked(submitTranslation)).toHaveBeenNthCalledWith(2, 'beta', file, 'en')
+
+    expect(MockEventSource.instances).toHaveLength(2)
+    MockEventSource.instances[0]!.emit({
+      ...succeededJob,
+      model_name: 'alpha',
+      result: { text: 'Result A', target_language: 'en', model_name: 'alpha', confidence: 0.9 },
+    })
+    MockEventSource.instances[1]!.emit({
+      ...succeededJob,
+      model_name: 'beta',
+      result: { text: 'Result B', target_language: 'en', model_name: 'beta', confidence: 0.9 },
+    })
+    await flushPromises()
+
+    const panels = wrapper.findAll('.panel')
+    expect(panels).toHaveLength(2)
+    expect(panels[0]!.text()).toContain('alpha')
+    expect(panels[0]!.text()).toContain('Result A')
+    expect(panels[1]!.text()).toContain('beta')
+    expect(panels[1]!.text()).toContain('Result B')
   })
 })
