@@ -1,8 +1,12 @@
 import type {
   ApiError,
+  ExperimentDetail,
   Job,
+  MetricsTable,
   ModelInfo,
   SegmentDetail,
+  SegmentFacets,
+  SegmentFilters,
   SegmentPage,
   TranslateAccepted,
 } from './types'
@@ -66,14 +70,35 @@ export function jobEventsUrl(jobId: string): string {
   return `${API_BASE}/jobs/${encodeURIComponent(jobId)}/events`
 }
 
-// GET /segments — one page of segment records (offset-based pagination).
-export async function listSegments(limit: number, offset: number): Promise<SegmentPage> {
+// GET /segments — one page of segment records (offset-based pagination, optional filters).
+export async function listSegments(
+  limit: number,
+  offset: number,
+  filters: SegmentFilters = {},
+): Promise<SegmentPage> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  for (const [key, value] of Object.entries(filters)) {
+    if (Array.isArray(value)) {
+      // Multi-select: one repeated query param per chosen value.
+      value.forEach((v) => params.append(key, v))
+    } else if (value) {
+      params.set(key, value)
+    }
+  }
   const response = await fetch(`${API_BASE}/segments?${params}`)
   if (!response.ok) {
     throw await toError(response)
   }
   return (await response.json()) as SegmentPage
+}
+
+// GET /segments/filters — distinct values to populate the list's filter dropdowns.
+export async function getSegmentFilters(): Promise<SegmentFacets> {
+  const response = await fetch(`${API_BASE}/segments/filters`)
+  if (!response.ok) {
+    throw await toError(response)
+  }
+  return (await response.json()) as SegmentFacets
 }
 
 // GET /segments/{id} — full detail for one segment.
@@ -88,4 +113,27 @@ export async function getSegment(id: number): Promise<SegmentDetail> {
 // URL for a segment's mp4 clip (GET /segments/{id}/video) — used as a <video> src.
 export function segmentVideoUrl(id: number): string {
   return `${API_BASE}/segments/${id}/video`
+}
+
+// GET /metrics — the full benchmark matrix (metric columns + experiment rows).
+export async function getMetrics(): Promise<MetricsTable> {
+  const response = await fetch(`${API_BASE}/metrics`)
+  if (!response.ok) {
+    throw await toError(response)
+  }
+  return (await response.json()) as MetricsTable
+}
+
+// GET /experiments/{id} — full detail for one experiment.
+export async function getExperiment(id: number): Promise<ExperimentDetail> {
+  const response = await fetch(`${API_BASE}/experiments/${id}`)
+  if (!response.ok) {
+    throw await toError(response)
+  }
+  return (await response.json()) as ExperimentDetail
+}
+
+// URL for an experiment's model architecture diagram (GET /experiments/{id}/architecture).
+export function experimentArchitectureUrl(id: number): string {
+  return `${API_BASE}/experiments/${id}/architecture`
 }

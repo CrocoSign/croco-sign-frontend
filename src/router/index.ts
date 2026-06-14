@@ -20,6 +20,17 @@ const router = createRouter({
       component: () => import('@/views/SegmentDetailPage.vue'),
       props: true,
     },
+    {
+      path: '/metrics',
+      name: 'metrics',
+      component: () => import('@/views/MetricsPage.vue'),
+    },
+    {
+      path: '/metrics/:id',
+      name: 'experiment',
+      component: () => import('@/views/ExperimentDetailPage.vue'),
+      props: true,
+    },
   ],
 })
 

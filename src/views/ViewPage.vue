@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { listSegments } from '@/api/client'
-import type { SegmentSummary } from '@/api/types'
+import { getSegmentFilters, listSegments } from '@/api/client'
+import type { SegmentFacets, SegmentFilters, SegmentSummary } from '@/api/types'
 
 const router = useRouter()
 
@@ -13,6 +13,7 @@ function openSegment(id: number) {
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 200]
 const SKELETON_ROWS = 8
+const SEARCH_DEBOUNCE_MS = 300
 
 const segments = ref<SegmentSummary[]>([])
 const total = ref(0)
@@ -20,6 +21,31 @@ const pageSize = ref(50)
 const loading = ref(false) // a fetch is in flight
 const initialLoading = ref(false) // first load / after page-size change (drives skeleton)
 const error = ref<string | null>(null)
+
+// Filters. `sentenceInput` is what the user types; `sentence` is its debounced
+// value so we don't refetch on every keystroke. The facets populate the dropdowns.
+const facets = ref<SegmentFacets>({ ages: [], sexes: [], speaker_ids: [] })
+// Multi-select checkbox groups: each holds the values currently ticked.
+const ages = ref<string[]>([])
+const sexes = ref<string[]>([])
+const speakerIds = ref<string[]>([])
+const sentenceInput = ref('')
+const sentence = ref('')
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(sentenceInput, (value) => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    sentence.value = value.trim()
+  }, SEARCH_DEBOUNCE_MS)
+})
+
+const filters = computed<SegmentFilters>(() => ({
+  age: ages.value,
+  sex: sexes.value,
+  speaker_id: speakerIds.value,
+  sentence: sentence.value || undefined,
+}))
 
 // More rows exist as long as we've loaded fewer than the server's total.
 const hasMore = computed(() => segments.value.length < total.value)
@@ -38,7 +64,7 @@ async function loadMore() {
   loading.value = true
   error.value = null
   try {
-    const page = await listSegments(pageSize.value, segments.value.length)
+    const page = await listSegments(pageSize.value, segments.value.length, filters.value)
     segments.value.push(...page.items)
     total.value = page.total
   } catch (err) {
@@ -58,9 +84,16 @@ async function reset() {
   await loadMore()
 }
 
-watch(pageSize, reset)
+// Any page-size or filter change restarts the list from offset 0.
+watch([pageSize, filters], reset)
 
-onMounted(() => {
+onMounted(async () => {
+  // Non-fatal: if facets fail to load the dropdowns stay empty but the list works.
+  try {
+    facets.value = await getSegmentFilters()
+  } catch {
+    // ignore — leave dropdowns empty
+  }
   reset()
   observer = new IntersectionObserver(
     (entries) => {
@@ -78,6 +111,7 @@ onMounted(() => {
 onUnmounted(() => {
   observer?.disconnect()
   observer = null
+  clearTimeout(searchTimer)
 })
 </script>
 
@@ -86,8 +120,44 @@ onUnmounted(() => {
     <h1>Segments</h1>
     <p class="subtitle">Browse the dataset of sign-language segments.</p>
 
-    <!-- Fixed header area; future filters will live here, above the scroll region. -->
+    <!-- Fixed header area; filters live here, above the scroll region. -->
     <div class="toolbar">
+      <div class="filters">
+        <fieldset class="filter">
+          <legend>Sex</legend>
+          <div class="options">
+            <label v-for="value in facets.sexes" :key="value" class="check">
+              <input type="checkbox" :value="value" v-model="sexes" />
+              <span>{{ value }}</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="filter">
+          <legend>Age</legend>
+          <div class="options">
+            <label v-for="value in facets.ages" :key="value" class="check">
+              <input type="checkbox" :value="value" v-model="ages" />
+              <span>{{ value }}</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="filter">
+          <legend>Signer</legend>
+          <div class="options options--scroll">
+            <label v-for="value in facets.speaker_ids" :key="value" class="check">
+              <input type="checkbox" :value="value" v-model="speakerIds" />
+              <span>{{ value }}</span>
+            </label>
+          </div>
+        </fieldset>
+        <label class="filter filter--search">
+          <span class="filter-title">Search</span>
+          <input v-model="sentenceInput" type="search" placeholder="Sentence text…" />
+        </label>
+      </div>
+    </div>
+
+    <div class="toolbar toolbar--secondary">
       <label class="page-size">
         <span>Show</span>
         <select v-model.number="pageSize">
@@ -104,6 +174,7 @@ onUnmounted(() => {
           <tr>
             <th class="col-id">Segment ID</th>
             <th>Sentence</th>
+            <th class="col-signer">Signer</th>
             <th class="col-narrow">Age</th>
             <th class="col-narrow">Sex</th>
           </tr>
@@ -116,6 +187,7 @@ onUnmounted(() => {
               </RouterLink>
             </td>
             <td>{{ seg.sentence }}</td>
+            <td class="col-signer">{{ seg.speaker_id }}</td>
             <td class="col-narrow">{{ seg.age }}</td>
             <td class="col-narrow">{{ seg.sex }}</td>
           </tr>
@@ -125,6 +197,7 @@ onUnmounted(() => {
             <tr v-for="n in SKELETON_ROWS" :key="`sk-${n}`" class="skeleton-row">
               <td><span class="skeleton" /></td>
               <td><span class="skeleton" /></td>
+              <td class="col-signer"><span class="skeleton" /></td>
               <td class="col-narrow"><span class="skeleton skeleton--sm" /></td>
               <td class="col-narrow"><span class="skeleton skeleton--sm" /></td>
             </tr>
@@ -175,6 +248,73 @@ onUnmounted(() => {
   flex-wrap: wrap;
 }
 
+.toolbar--secondary {
+  margin: 0 0 0.75rem;
+}
+
+.filters {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Checkbox groups are <fieldset>s; strip the default chrome. */
+fieldset.filter {
+  border: 1px solid #e3e6ea;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.7rem 0.6rem;
+  margin: 0;
+}
+
+fieldset.filter legend {
+  padding: 0 0.3rem;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+}
+
+.options--scroll {
+  flex-wrap: nowrap;
+  flex-direction: column;
+  max-height: 7rem;
+  overflow-y: auto;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-title {
+  font-weight: 600;
+}
+
+.filter--search input {
+  padding: 0.3rem 0.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  border: 1px solid #ccd2d8;
+  border-radius: 0.25rem;
+  min-width: 14rem;
+}
+
 .page-size {
   display: inline-flex;
   align-items: center;
@@ -221,6 +361,11 @@ onUnmounted(() => {
 }
 
 .col-id {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-signer {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }

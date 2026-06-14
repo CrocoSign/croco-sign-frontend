@@ -5,6 +5,7 @@
     <nav class="nav__links">
       <RouterLink to="/translate">Translate</RouterLink>
       <RouterLink to="/view">View</RouterLink>
+      <RouterLink to="/metrics">Metrics</RouterLink>
     </nav>
   </header>
   <RouterView />

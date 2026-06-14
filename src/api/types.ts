@@ -46,12 +46,29 @@ export interface SegmentSummary {
   sentence: string
   age: string
   sex: string
+  speaker_id: string
 }
 
-// A page of segments plus the total count across the whole dataset.
+// A page of segments plus the total count matching the active filters.
 export interface SegmentPage {
   items: SegmentSummary[]
   total: number
+}
+
+// Optional narrowing criteria for the segments list (GET /segments query params).
+// age/sex/speaker_id are multi-select: each value is sent as a repeated param.
+export interface SegmentFilters {
+  age?: string[]
+  sex?: string[]
+  speaker_id?: string[]
+  sentence?: string
+}
+
+// Distinct values available for each dropdown filter (GET /segments/filters).
+export interface SegmentFacets {
+  ages: string[]
+  sexes: string[]
+  speaker_ids: string[]
 }
 
 // The person who produced a recording (GET /segments/{id}).
@@ -81,4 +98,48 @@ export interface SegmentDetail {
   segment_id: string
   sentence: string
   video_metadata: VideoMetadata
+}
+
+// An evaluated translation architecture (the architecture diagram is served as
+// bytes by GET /experiments/{id}/architecture, so it's not a field here).
+export interface BenchmarkModel {
+  id: number
+  display_name: string
+}
+
+// An evaluation metric column (GET /metrics).
+export interface MetricDefinition {
+  id: number
+  name: string
+  description: string
+}
+
+// One row of the benchmark matrix: scores keyed by metric name.
+export interface ExperimentRow {
+  id: number
+  model: BenchmarkModel
+  transfer_source: string
+  split: string
+  scores: Record<string, number>
+}
+
+// The full benchmark matrix (GET /metrics): ordered metric columns + rows.
+export interface MetricsTable {
+  metrics: MetricDefinition[]
+  experiments: ExperimentRow[]
+}
+
+// One metric's value for an experiment, with its definition (GET /experiments/{id}).
+export interface ExperimentScore {
+  metric: MetricDefinition
+  value: number
+}
+
+// Full detail for one experiment (GET /experiments/{id}).
+export interface ExperimentDetail {
+  id: number
+  transfer_source: string
+  split: string
+  model: BenchmarkModel
+  scores: ExperimentScore[]
 }
