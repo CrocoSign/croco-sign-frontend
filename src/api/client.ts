@@ -115,6 +115,16 @@ export function segmentVideoUrl(id: number): string {
   return `${API_BASE}/segments/${id}/video`
 }
 
+// GET /segments/{id}/video as a File, suitable for submitting to /translate.
+export async function fetchSegmentVideoFile(id: number): Promise<File> {
+  const response = await fetch(segmentVideoUrl(id))
+  if (!response.ok) {
+    throw await toError(response)
+  }
+  const blob = await response.blob()
+  return new File([blob], `segment-${id}.mp4`, { type: blob.type || 'video/mp4' })
+}
+
 // GET /metrics — the full benchmark matrix (metric columns + experiment rows).
 export async function getMetrics(): Promise<MetricsTable> {
   const response = await fetch(`${API_BASE}/metrics`)

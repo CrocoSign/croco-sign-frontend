@@ -9,10 +9,13 @@ vi.mock('@/api/client', () => ({
   listModels: vi.fn<typeof import('@/api/client').listModels>(),
   submitTranslation: vi.fn<typeof import('@/api/client').submitTranslation>(),
   getJob: vi.fn<typeof import('@/api/client').getJob>(),
+  getSegment: vi.fn<typeof import('@/api/client').getSegment>(),
+  fetchSegmentVideoFile: vi.fn<typeof import('@/api/client').fetchSegmentVideoFile>(),
   jobEventsUrl: (id: string) => `http://localhost:8000/jobs/${id}/events`,
 }))
 
-import { listModels, submitTranslation } from '@/api/client'
+import { createRouter, createMemoryHistory, type Router } from 'vue-router'
+import { fetchSegmentVideoFile, getSegment, listModels, submitTranslation } from '@/api/client'
 
 // Minimal EventSource stub that lets tests drive onmessage.
 class MockEventSource {
@@ -50,6 +53,8 @@ describe('TranslatePage', () => {
   beforeEach(() => {
     vi.mocked(listModels).mockReset()
     vi.mocked(submitTranslation).mockReset()
+    vi.mocked(getSegment).mockReset()
+    vi.mocked(fetchSegmentVideoFile).mockReset()
     MockEventSource.last = null
     MockEventSource.instances = []
   })
@@ -176,5 +181,85 @@ describe('TranslatePage', () => {
     expect(panels[0]!.text()).toContain('Result A')
     expect(panels[1]!.text()).toContain('beta')
     expect(panels[1]!.text()).toContain('Result B')
+  })
+
+  it('prefills the video and reference text from a segmentId query param', async () => {
+    vi.mocked(listModels).mockResolvedValue([{ name: 'mock' }])
+    vi.mocked(getSegment).mockResolvedValue({
+      id: 7,
+      segment_id: 'PJM_007',
+      sentence: 'The reference sentence.',
+      video_metadata: {} as never,
+    })
+    const segmentFile = new File(['clip'], 'segment-7.mp4', { type: 'video/mp4' })
+    vi.mocked(fetchSegmentVideoFile).mockResolvedValue(segmentFile)
+    vi.mocked(submitTranslation).mockResolvedValue({
+      job_id: 'abc123',
+      status: 'pending',
+      status_url: 'http://localhost:8000/jobs/abc123',
+    })
+
+    const router: Router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/translate', name: 'translate', component: TranslatePage }],
+    })
+    router.push({ name: 'translate', query: { segmentId: '7' } })
+    await router.isReady()
+
+    const wrapper = mount(TranslatePage, { global: { plugins: [router] } })
+    await flushPromises()
+
+    expect(vi.mocked(getSegment)).toHaveBeenCalledWith(7)
+    expect(vi.mocked(fetchSegmentVideoFile)).toHaveBeenCalledWith(7)
+    // Reference text and prefill note are shown.
+    expect(wrapper.text()).toContain('The reference sentence.')
+    expect(wrapper.text()).toContain('PJM_007')
+    // Submit is enabled without manually choosing a file, and uses the segment's file.
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
+
+    await wrapper.get('form').trigger('submit')
+    expect(vi.mocked(submitTranslation)).toHaveBeenCalledWith('mock', segmentFile, 'en')
+  })
+
+  it('drops the segment reference when the user attaches their own file', async () => {
+    vi.mocked(listModels).mockResolvedValue([{ name: 'mock' }])
+    vi.mocked(getSegment).mockResolvedValue({
+      id: 7,
+      segment_id: 'PJM_007',
+      sentence: 'The reference sentence.',
+      video_metadata: {} as never,
+    })
+    vi.mocked(fetchSegmentVideoFile).mockResolvedValue(
+      new File(['clip'], 'segment-7.mp4', { type: 'video/mp4' }),
+    )
+    vi.mocked(submitTranslation).mockResolvedValue({
+      job_id: 'abc123',
+      status: 'pending',
+      status_url: 'http://localhost:8000/jobs/abc123',
+    })
+
+    const router: Router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/translate', name: 'translate', component: TranslatePage }],
+    })
+    router.push({ name: 'translate', query: { segmentId: '7' } })
+    await router.isReady()
+
+    const wrapper = mount(TranslatePage, { global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('The reference sentence.')
+
+    // The user picks their own file instead.
+    const ownFile = new File(['mine'], 'mine.mp4', { type: 'video/mp4' })
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', { value: [ownFile] })
+    await input.trigger('change')
+
+    // Reference text and the prefill note are gone; the new file is used.
+    expect(wrapper.text()).not.toContain('The reference sentence.')
+    expect(wrapper.text()).not.toContain('PJM_007')
+
+    await wrapper.get('form').trigger('submit')
+    expect(vi.mocked(submitTranslation)).toHaveBeenCalledWith('mock', ownFile, 'en')
   })
 })

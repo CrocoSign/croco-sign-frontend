@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { getSegment, segmentVideoUrl } from '@/api/client'
 import type { SegmentDetail } from '@/api/types'
 
 const props = defineProps<{ id: string }>()
+
+const router = useRouter()
+
+function translateSegment() {
+  if (!segment.value) return
+  router.push({ name: 'translate', query: { segmentId: String(segment.value.id) } })
+}
 
 const segment = ref<SegmentDetail | null>(null)
 const loading = ref(true)
@@ -55,6 +63,10 @@ watch(() => props.id, load)
         :src="segmentVideoUrl(segment.id)"
         @error="videoFailed = true"
       ></video>
+
+      <button type="button" class="translate-btn" @click="translateSegment">
+        Translate this segment
+      </button>
 
       <dl class="meta">
         <dt>Signer sex</dt>
@@ -123,6 +135,20 @@ watch(() => props.id, load)
   margin: 1rem 0;
   background: #000;
   border-radius: 0.5rem;
+}
+
+.translate-btn {
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  color: #fff;
+  background: #2c3e50;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.translate-btn:hover {
+  opacity: 0.9;
 }
 
 .meta {

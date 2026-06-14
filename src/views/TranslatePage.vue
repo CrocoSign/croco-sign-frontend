@@ -1,7 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { getJob, jobEventsUrl, listModels, submitTranslation } from '@/api/client'
+import { useRoute } from 'vue-router'
+import {
+  fetchSegmentVideoFile,
+  getJob,
+  getSegment,
+  jobEventsUrl,
+  listModels,
+  submitTranslation,
+} from '@/api/client'
 import type { Job, ModelInfo } from '@/api/types'
+
+const route = useRoute()
 
 const models = ref<ModelInfo[]>([])
 const advancedMode = ref(false)
@@ -9,6 +19,12 @@ const selectedModel = ref('')
 const selectedModelB = ref('')
 const selectedLanguage = ref<'en' | 'pl'>('en')
 const videoFile = ref<File | null>(null)
+
+// When the video was pre-loaded from a segment, we hold its reference sentence
+// (ground truth) for side-by-side comparison and the segment id for a UI note.
+const referenceText = ref<string | null>(null)
+const prefillName = ref<string | null>(null)
+const loadingSegment = ref(false)
 
 // One slot per translation in flight: a single model in basic mode, two in
 // advanced (compare) mode. Each slot streams its own job independently.
@@ -31,6 +47,7 @@ const canSubmit = computed(
     (!advancedMode.value || !!selectedModelB.value) &&
     !!videoFile.value &&
     !submitting.value &&
+    !loadingSegment.value &&
     !isProcessing.value,
 )
 
@@ -43,7 +60,32 @@ function closeStreams() {
 
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
-  videoFile.value = input.files?.[0] ?? null
+  const file = input.files?.[0] ?? null
+  // Ignore an empty change (e.g. the picker was cancelled) so it can't wipe out
+  // a video/reference already prefilled from a segment.
+  if (!file) {
+    return
+  }
+  videoFile.value = file
+  // The reference no longer applies once the user picks their own file.
+  prefillName.value = null
+  referenceText.value = null
+}
+
+async function loadFromSegment(id: number) {
+  loadingSegment.value = true
+  try {
+    const detail = await getSegment(id)
+    referenceText.value = detail.sentence
+    videoFile.value = await fetchSegmentVideoFile(id)
+    prefillName.value = detail.segment_id
+  } catch (err) {
+    error.value = err instanceof Error
+      ? `Couldn't load segment video: ${err.message}`
+      : "Couldn't load segment video."
+  } finally {
+    loadingSegment.value = false
+  }
 }
 
 async function onSubmit() {
@@ -121,6 +163,11 @@ onMounted(async () => {
     error.value =
       err instanceof Error ? `Couldn't load models: ${err.message}` : "Couldn't load models."
   }
+
+  const segmentId = route?.query?.segmentId
+  if (typeof segmentId === 'string') {
+    await loadFromSegment(Number(segmentId))
+  }
 })
 
 onUnmounted(closeStreams)
@@ -177,10 +224,22 @@ onUnmounted(closeStreams)
       <label class="field">
         <span>Video</span>
         <input type="file" accept="video/*" @change="onFileChange" />
+        <span v-if="loadingSegment" class="prefill">
+          <span class="spinner" aria-hidden="true"></span>
+          Loading segment video…
+        </span>
+        <span v-else-if="prefillName" class="prefill">
+          Using video from segment {{ prefillName }}
+        </span>
       </label>
 
       <button type="submit" :disabled="!canSubmit">Translate</button>
     </form>
+
+    <section v-if="referenceText" class="reference">
+      <h2>Reference translation</h2>
+      <p class="result-text">{{ referenceText }}</p>
+    </section>
 
     <section v-if="slots.length > 0" class="results">
       <article v-for="(slot, index) in slots" :key="index" class="panel">
@@ -262,6 +321,22 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.prefill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+  color: #666;
+}
+
+.reference {
+  margin-bottom: 1.5rem;
+}
+
+.reference h2 {
+  margin-top: 0;
 }
 
 .results {
