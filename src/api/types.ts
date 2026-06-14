@@ -38,3 +38,47 @@ export interface ApiError {
   code: string
   message: string
 }
+
+// One row of the segments list (GET /segments).
+export interface SegmentSummary {
+  id: number
+  segment_id: string
+  sentence: string
+  age: string
+  sex: string
+}
+
+// A page of segments plus the total count across the whole dataset.
+export interface SegmentPage {
+  items: SegmentSummary[]
+  total: number
+}
+
+// The person who produced a recording (GET /segments/{id}).
+export interface Signer {
+  id: number
+  speaker_id: string
+  sex: string
+  age: string
+  special_case: string
+}
+
+// Metadata about the source recording a segment was cut from.
+export interface VideoMetadata {
+  id: number
+  video_id: number
+  video_url: string
+  subtitles_url: string
+  video_type: string
+  task_id: number
+  speaker_side: string
+  signer: Signer
+}
+
+// Full detail for one segment (GET /segments/{id}).
+export interface SegmentDetail {
+  id: number
+  segment_id: string
+  sentence: string
+  video_metadata: VideoMetadata
+}

@@ -1,4 +1,11 @@
-import type { ApiError, Job, ModelInfo, TranslateAccepted } from './types'
+import type {
+  ApiError,
+  Job,
+  ModelInfo,
+  SegmentDetail,
+  SegmentPage,
+  TranslateAccepted,
+} from './types'
 
 // Backend base URL. Defaults to the local dev server; override with VITE_API_BASE_URL.
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -57,4 +64,28 @@ export async function getJob(jobId: string): Promise<Job> {
 // URL for the SSE stream of job status changes (GET /jobs/{job_id}/events).
 export function jobEventsUrl(jobId: string): string {
   return `${API_BASE}/jobs/${encodeURIComponent(jobId)}/events`
+}
+
+// GET /segments — one page of segment records (offset-based pagination).
+export async function listSegments(limit: number, offset: number): Promise<SegmentPage> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  const response = await fetch(`${API_BASE}/segments?${params}`)
+  if (!response.ok) {
+    throw await toError(response)
+  }
+  return (await response.json()) as SegmentPage
+}
+
+// GET /segments/{id} — full detail for one segment.
+export async function getSegment(id: number): Promise<SegmentDetail> {
+  const response = await fetch(`${API_BASE}/segments/${id}`)
+  if (!response.ok) {
+    throw await toError(response)
+  }
+  return (await response.json()) as SegmentDetail
+}
+
+// URL for a segment's mp4 clip (GET /segments/{id}/video) — used as a <video> src.
+export function segmentVideoUrl(id: number): string {
+  return `${API_BASE}/segments/${id}/video`
 }

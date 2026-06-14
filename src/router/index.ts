@@ -9,6 +9,17 @@ const router = createRouter({
       name: 'translate',
       component: () => import('@/views/TranslatePage.vue'),
     },
+    {
+      path: '/view',
+      name: 'view',
+      component: () => import('@/views/ViewPage.vue'),
+    },
+    {
+      path: '/view/:id',
+      name: 'segment',
+      component: () => import('@/views/SegmentDetailPage.vue'),
+      props: true,
+    },
   ],
 })
 
