@@ -1,0 +1,104 @@
+{
+  "common": {
+    "retry": "Spróbuj ponownie",
+    "loading": "Wczytywanie…",
+    "english": "Angielski",
+    "polish": "Polski"
+  },
+  "nav": {
+    "brand": "CrocoSign",
+    "translate": "Tłumacz",
+    "view": "Segmenty",
+    "metrics": "Metryki",
+    "toggleTheme": "Przełącz motyw",
+    "language": "Język"
+  },
+  "translate": {
+    "title": "Tłumaczenie polskiego języka migowego (PJM)",
+    "subtitle": "Wybierz model, wgraj nagranie w języku migowym i otrzymaj przetłumaczony tekst.",
+    "compare": "Porównaj dwa modele",
+    "model": "Model",
+    "modelA": "Model A",
+    "modelB": "Model B",
+    "models": "Modele",
+    "addModel": "Dodaj model",
+    "removeModel": "Usuń model",
+    "language": "Język",
+    "video": "Nagranie",
+    "chooseVideo": "Wybierz nagranie",
+    "noFile": "Nie wybrano pliku",
+    "loadingSegment": "Wczytywanie nagrania segmentu…",
+    "usingSegment": "Używam nagrania z segmentu {name}",
+    "submit": "Tłumacz",
+    "reference": "Tłumaczenie referencyjne",
+    "outputEmpty": "Tutaj pojawi się tłumaczenie. Wybierz model, wgraj nagranie i kliknij „Tłumacz\".",
+    "translatingStatus": "Tłumaczenie… ({status})",
+    "translating": "Tłumaczenie…",
+    "failed": "Tłumaczenie nie powiodło się.",
+    "errors": {
+      "loadSegment": "Nie udało się wczytać nagrania segmentu: {message}",
+      "loadSegmentGeneric": "Nie udało się wczytać nagrania segmentu.",
+      "submit": "Nie udało się wysłać tłumaczenia.",
+      "stream": "Utracono połączenie ze strumieniem tłumaczenia.",
+      "loadModels": "Nie udało się wczytać modeli: {message}",
+      "loadModelsGeneric": "Nie udało się wczytać modeli."
+    }
+  },
+  "view": {
+    "title": "Segmenty",
+    "subtitle": "Przeglądaj zbiór segmentów w języku migowym.",
+    "filterSex": "Płeć",
+    "filterAge": "Wiek",
+    "filterSigner": "Osoba migająca",
+    "search": "Szukaj",
+    "searchPlaceholder": "Treść zdania…",
+    "show": "Pokaż",
+    "perLoad": "na partię",
+    "countOf": "{loaded} z {total}",
+    "colId": "ID segmentu",
+    "colSentence": "Zdanie",
+    "colSigner": "Osoba migająca",
+    "colAge": "Wiek",
+    "colSex": "Płeć",
+    "empty": "Nie znaleziono segmentów.",
+    "loadingMore": "Wczytywanie kolejnych…",
+    "reachedEnd": "To już koniec · {total} segmentów.",
+    "loadError": "Nie udało się wczytać segmentów."
+  },
+  "segment": {
+    "back": "← Wróć do segmentów",
+    "videoFailed": "Nie udało się wczytać nagrania dla tego segmentu.",
+    "translateBtn": "Przetłumacz ten segment",
+    "loadError": "Nie udało się wczytać segmentu.",
+    "meta": {
+      "signerSex": "Płeć osoby migającej",
+      "signerAge": "Wiek osoby migającej",
+      "specialCase": "Przypadek szczególny",
+      "speakerSide": "Strona mówcy",
+      "videoType": "Typ nagrania",
+      "videoId": "ID nagrania",
+      "taskId": "ID zadania",
+      "source": "Źródło"
+    },
+    "videoLink": "nagranie ↗",
+    "subtitlesLink": "napisy ↗"
+  },
+  "metrics": {
+    "title": "Metryki benchmarku",
+    "transferSource": "Źródło transferu",
+    "split": "Podział",
+    "loadError": "Nie udało się wczytać metryk.",
+    "splitLegend": "Podział testowy",
+    "ms": "MS (multi-signer) - w teście osoby obecne też w treningu (znane modelowi).",
+    "si": "SI (signer-independent) - w teście wyłącznie osoby niewidziane w treningu (test generalizacji)."
+  },
+  "experiment": {
+    "back": "← Wróć do metryk",
+    "imageFailed": "Nie udało się wczytać diagramu architektury.",
+    "architecture": "Architektura modelu",
+    "metricsHeading": "Metryki",
+    "loadError": "Nie udało się wczytać eksperymentu.",
+    "codeLink": "Kod architektury",
+    "weightsLink": "Wagi modelu"
+  }
+}

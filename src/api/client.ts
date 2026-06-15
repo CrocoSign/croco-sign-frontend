@@ -11,8 +11,18 @@ import type {
   TranslateAccepted,
 } from './types'
 
-// Backend base URL. Defaults to the local dev server; override with VITE_API_BASE_URL.
-export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+// Backend base URL. Defaults to the SAME host the app is served from, on port 8000,
+// so it works identically over localhost, LAN and Tailscale (the browser would
+// otherwise hit ITS OWN localhost when the app is opened from another device).
+// Override with VITE_API_BASE_URL when the backend lives elsewhere.
+function defaultApiBase(): string {
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `${window.location.protocol}//${window.location.hostname}:8000`
+  }
+  return 'http://localhost:8000'
+}
+
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? defaultApiBase()
 
 // Turns a non-2xx response into an Error carrying the backend's { code, message }.
 async function toError(response: Response): Promise<Error> {
@@ -27,7 +37,7 @@ async function toError(response: Response): Promise<Error> {
   return new Error(`Request failed (${response.status})`)
 }
 
-// GET /models — list available translation models.
+// GET /models - list available translation models.
 export async function listModels(): Promise<ModelInfo[]> {
   const response = await fetch(`${API_BASE}/models`)
   if (!response.ok) {
@@ -36,7 +46,7 @@ export async function listModels(): Promise<ModelInfo[]> {
   return (await response.json()) as ModelInfo[]
 }
 
-// POST /models/{model_name}/translate — submit a video; returns 202 with a job id.
+// POST /models/{model_name}/translate - submit a video; returns 202 with a job id.
 export async function submitTranslation(
   modelName: string,
   video: File,
@@ -56,7 +66,7 @@ export async function submitTranslation(
   return (await response.json()) as TranslateAccepted
 }
 
-// GET /jobs/{job_id} — one-shot status poll (used as an SSE fallback).
+// GET /jobs/{job_id} - one-shot status poll (used as an SSE fallback).
 export async function getJob(jobId: string): Promise<Job> {
   const response = await fetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}`)
   if (!response.ok) {
@@ -70,7 +80,7 @@ export function jobEventsUrl(jobId: string): string {
   return `${API_BASE}/jobs/${encodeURIComponent(jobId)}/events`
 }
 
-// GET /segments — one page of segment records (offset-based pagination, optional filters).
+// GET /segments - one page of segment records (offset-based pagination, optional filters).
 export async function listSegments(
   limit: number,
   offset: number,
@@ -92,7 +102,7 @@ export async function listSegments(
   return (await response.json()) as SegmentPage
 }
 
-// GET /segments/filters — distinct values to populate the list's filter dropdowns.
+// GET /segments/filters - distinct values to populate the list's filter dropdowns.
 export async function getSegmentFilters(): Promise<SegmentFacets> {
   const response = await fetch(`${API_BASE}/segments/filters`)
   if (!response.ok) {
@@ -101,7 +111,7 @@ export async function getSegmentFilters(): Promise<SegmentFacets> {
   return (await response.json()) as SegmentFacets
 }
 
-// GET /segments/{id} — full detail for one segment.
+// GET /segments/{id} - full detail for one segment.
 export async function getSegment(id: number): Promise<SegmentDetail> {
   const response = await fetch(`${API_BASE}/segments/${id}`)
   if (!response.ok) {
@@ -110,7 +120,7 @@ export async function getSegment(id: number): Promise<SegmentDetail> {
   return (await response.json()) as SegmentDetail
 }
 
-// URL for a segment's mp4 clip (GET /segments/{id}/video) — used as a <video> src.
+// URL for a segment's mp4 clip (GET /segments/{id}/video) - used as a <video> src.
 export function segmentVideoUrl(id: number): string {
   return `${API_BASE}/segments/${id}/video`
 }
@@ -125,7 +135,7 @@ export async function fetchSegmentVideoFile(id: number): Promise<File> {
   return new File([blob], `segment-${id}.mp4`, { type: blob.type || 'video/mp4' })
 }
 
-// GET /metrics — the full benchmark matrix (metric columns + experiment rows).
+// GET /metrics - the full benchmark matrix (metric columns + experiment rows).
 export async function getMetrics(): Promise<MetricsTable> {
   const response = await fetch(`${API_BASE}/metrics`)
   if (!response.ok) {
@@ -134,7 +144,7 @@ export async function getMetrics(): Promise<MetricsTable> {
   return (await response.json()) as MetricsTable
 }
 
-// GET /experiments/{id} — full detail for one experiment.
+// GET /experiments/{id} - full detail for one experiment.
 export async function getExperiment(id: number): Promise<ExperimentDetail> {
   const response = await fetch(`${API_BASE}/experiments/${id}`)
   if (!response.ok) {

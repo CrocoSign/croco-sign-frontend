@@ -1,0 +1,104 @@
+{
+  "common": {
+    "retry": "Retry",
+    "loading": "Loading…",
+    "english": "English",
+    "polish": "Polish"
+  },
+  "nav": {
+    "brand": "CrocoSign",
+    "translate": "Translate",
+    "view": "Segments",
+    "metrics": "Metrics",
+    "toggleTheme": "Toggle theme",
+    "language": "Language"
+  },
+  "translate": {
+    "title": "PJM Sign Language Translation",
+    "subtitle": "Pick a model, upload a sign-language video, and get the translated text.",
+    "compare": "Compare two models",
+    "model": "Model",
+    "modelA": "Model A",
+    "modelB": "Model B",
+    "models": "Models",
+    "addModel": "Add model",
+    "removeModel": "Remove model",
+    "language": "Language",
+    "video": "Video",
+    "chooseVideo": "Choose a video",
+    "noFile": "No file selected",
+    "loadingSegment": "Loading segment video…",
+    "usingSegment": "Using video from segment {name}",
+    "submit": "Translate",
+    "reference": "Reference translation",
+    "outputEmpty": "The translation will appear here. Pick a model, upload a video and hit “Translate”.",
+    "translatingStatus": "Translating… ({status})",
+    "translating": "Translating…",
+    "failed": "Translation failed.",
+    "errors": {
+      "loadSegment": "Couldn't load segment video: {message}",
+      "loadSegmentGeneric": "Couldn't load segment video.",
+      "submit": "Failed to submit translation.",
+      "stream": "Lost connection to the translation stream.",
+      "loadModels": "Couldn't load models: {message}",
+      "loadModelsGeneric": "Couldn't load models."
+    }
+  },
+  "view": {
+    "title": "Segments",
+    "subtitle": "Browse the dataset of sign-language segments.",
+    "filterSex": "Sex",
+    "filterAge": "Age",
+    "filterSigner": "Signer",
+    "search": "Search",
+    "searchPlaceholder": "Sentence text…",
+    "show": "Show",
+    "perLoad": "per load",
+    "countOf": "{loaded} of {total}",
+    "colId": "Segment ID",
+    "colSentence": "Sentence",
+    "colSigner": "Signer",
+    "colAge": "Age",
+    "colSex": "Sex",
+    "empty": "No segments found.",
+    "loadingMore": "Loading more…",
+    "reachedEnd": "You've reached the end · {total} segments.",
+    "loadError": "Failed to load segments."
+  },
+  "segment": {
+    "back": "← Back to segments",
+    "videoFailed": "Couldn't load the video clip for this segment.",
+    "translateBtn": "Translate this segment",
+    "loadError": "Failed to load segment.",
+    "meta": {
+      "signerSex": "Signer sex",
+      "signerAge": "Signer age",
+      "specialCase": "Special case",
+      "speakerSide": "Speaker side",
+      "videoType": "Video type",
+      "videoId": "Video ID",
+      "taskId": "Task ID",
+      "source": "Source"
+    },
+    "videoLink": "video ↗",
+    "subtitlesLink": "subtitles ↗"
+  },
+  "metrics": {
+    "title": "Benchmark metrics",
+    "transferSource": "Transfer source",
+    "split": "Split",
+    "loadError": "Failed to load metrics.",
+    "splitLegend": "Test split",
+    "ms": "MS (multi-signer) - test set includes signers also seen in training (known to the model).",
+    "si": "SI (signer-independent) - test set contains only signers unseen in training (generalization test)."
+  },
+  "experiment": {
+    "back": "← Back to metrics",
+    "imageFailed": "Couldn't load the architecture diagram.",
+    "architecture": "Model architecture",
+    "metricsHeading": "Metrics",
+    "loadError": "Failed to load experiment.",
+    "codeLink": "Architecture code",
+    "weightsLink": "Model weights"
+  }
+}

@@ -17,4 +17,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    // Listen on all network interfaces (LAN / Tailscale accessible), not just localhost.
+    host: true,
+    // Accept any Host header (e.g. Tailscale MagicDNS names / IPs); Vite blocks
+    // unknown hosts by default and would return "host not allowed".
+    allowedHosts: true,
+  },
 })

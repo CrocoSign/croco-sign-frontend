@@ -1,0 +1,103 @@
+/*
+ * Design tokens - Croco-Sign
+ * Single source of truth for colour, type, spacing, radius and shadow.
+ * Components reference these variables only (no hardcoded hex).
+ *
+ * Look: Spotify-inspired - monochrome base with green used sparingly as the
+ * signature pop (primary actions, focus, spinner). Light is the default on
+ * :root; dark overrides via [data-theme="dark"]. The brand green is kept in
+ * its own --green* vars and mapped into --primary/--accent.
+ */
+
+:root {
+  /* Render native controls (scrollbars, <select> popups, etc.) in light scheme. */
+  color-scheme: light;
+
+  /* ---- Brand green - Spotify-inspired (light) ---- */
+  --green: #1db954;
+  --green-hover: #1aa34a;
+  --green-contrast: #06210f; /* near-black text on green (Spotify-style) */
+  --green-soft: #e8f8ee;
+
+  /* ---- Primary = brand green (used sparingly - main actions only) ---- */
+  --primary: var(--green);
+  --primary-hover: var(--green-hover);
+  --primary-contrast: var(--green-contrast);
+  --primary-soft: var(--green-soft);
+
+  /* ---- Accent = the same green (monochrome base, green is the only pop) ---- */
+  --accent: var(--green);
+  --accent-soft: var(--green-soft);
+
+  /* ---- Neutrals / surfaces (light) ---- */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f5f5f5;
+  --text: #121212;
+  --text-muted: #6a6a6a;
+  --border: #e1e1e1;
+
+  /* ---- Semantic ---- */
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --ring: rgba(29, 185, 84, 0.4);
+
+  /* ---- Scrollbars (suwaki) ---- */
+  --scrollbar-thumb: #cdcdcd;
+  --scrollbar-thumb-hover: #ababab;
+
+  /* ---- Typography ---- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---- Radius (Spotify-style generous rounding; buttons go full pill) ---- */
+  --radius-sm: 0.5rem;
+  --radius: 0.85rem;
+  --radius-lg: 1.25rem;
+
+  /* ---- Shadow (soft, minimalist) ---- */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+
+  /* ---- Spacing scale ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* ---- Layout: ONE consistent centered column for the whole app ---- */
+  --container: 64rem;
+  --container-narrow: 64rem;
+  --container-wide: 64rem;
+  --gutter: 1.25rem;
+}
+
+/* ---------- Dark theme - Spotify-inspired ---------- */
+:root[data-theme='dark'] {
+  /* Native controls (scrollbars, <select> dropdown list) render dark too. */
+  color-scheme: dark;
+
+  --green: #1ed760;
+  --green-hover: #1db954;
+  --green-contrast: #06210f;
+  --green-soft: rgba(30, 215, 96, 0.14);
+
+  --accent: var(--green);
+  --accent-soft: var(--green-soft);
+
+  --bg: #121212;
+  --surface: #181818;
+  --surface-2: #1f1f1f;
+  --text: #ffffff;
+  --text-muted: #b3b3b3;
+  --border: #2a2a2a;
+
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --ring: rgba(30, 215, 96, 0.4);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+}

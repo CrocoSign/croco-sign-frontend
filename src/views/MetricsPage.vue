@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { getMetrics } from '@/api/client'
 import type { ExperimentRow, MetricsTable } from '@/api/types'
+import type { AppLocale } from '@/i18n'
+import { localizeModelName, localizeTransferSource } from '@/i18n/dataLabels'
 
 const router = useRouter()
+const { t, locale } = useI18n()
+
+// Localise the few descriptive backend values (proper nouns pass through).
+const transfer = (v: string) => localizeTransferSource(v, locale.value as AppLocale)
+const modelName = (v: string) => localizeModelName(v, locale.value as AppLocale)
 
 const table = ref<MetricsTable | null>(null)
 const loading = ref(true)
@@ -34,7 +42,7 @@ async function load() {
   try {
     table.value = await getMetrics()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load metrics.'
+    error.value = err instanceof Error ? err.message : t('metrics.loadError')
   } finally {
     loading.value = false
   }
@@ -48,28 +56,36 @@ onMounted(load)
 </script>
 
 <template>
-  <main class="metrics">
-    <h1>Benchmark metrics</h1>
+  <main class="container metrics">
+    <h1>{{ t('metrics.title') }}</h1>
+
+    <div class="legend">
+      <span class="legend__title">{{ t('metrics.splitLegend') }}</span>
+      <span class="legend__item">{{ t('metrics.ms') }}</span>
+      <span class="legend__item">{{ t('metrics.si') }}</span>
+    </div>
 
     <div v-if="loading" class="status">
       <span class="spinner" aria-hidden="true"></span>
-      <span>Loading…</span>
+      <span>{{ t('common.loading') }}</span>
     </div>
 
     <p v-else-if="error" class="error">
       {{ error }}
-      <button type="button" @click="load">Retry</button>
+      <button type="button" class="btn btn-secondary btn-sm" @click="load">
+        {{ t('common.retry') }}
+      </button>
     </p>
 
     <template v-else-if="table">
       <section v-for="group in groups" :key="group.model.id" class="group">
-        <h2>{{ group.model.display_name }}</h2>
+        <h2>{{ modelName(group.model.display_name) }}</h2>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th class="left">Transfer source</th>
-                <th class="left">Split</th>
+                <th class="left">{{ t('metrics.transferSource') }}</th>
+                <th class="left">{{ t('metrics.split') }}</th>
                 <th v-for="name in metricNames" :key="name">{{ name }}</th>
               </tr>
             </thead>
@@ -82,10 +98,10 @@ onMounted(load)
                 @click="openExperiment(row.id)"
                 @keydown.enter="openExperiment(row.id)"
               >
-                <td class="left">{{ row.transfer_source }}</td>
+                <td class="left">{{ transfer(row.transfer_source) }}</td>
                 <td class="left">{{ row.split }}</td>
                 <td v-for="name in metricNames" :key="name">
-                  {{ row.scores[name] ?? '—' }}
+                  {{ row.scores[name] ?? '-' }}
                 </td>
               </tr>
             </tbody>
@@ -98,13 +114,33 @@ onMounted(load)
 
 <style scoped>
 .metrics {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  padding-block: 2rem;
 }
 
 h1 {
-  color: #2c3e50;
+  color: var(--text);
+}
+
+/* MS / SI explanation. */
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.85rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.legend__title {
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .group {
@@ -112,14 +148,14 @@ h1 {
 }
 
 .group h2 {
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 0.5rem;
 }
 
 .table-wrap {
   overflow-x: auto;
-  border: 1px solid #e3e6ea;
-  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 table {
@@ -129,21 +165,25 @@ table {
 }
 
 thead th {
-  background: #f4f6f8;
-  color: #2c3e50;
+  background: var(--surface-2);
+  color: var(--text);
   font-weight: 600;
   text-align: right;
   padding: 0.6rem 0.85rem;
   white-space: nowrap;
-  border-bottom: 1px solid #e3e6ea;
+  border-bottom: 1px solid var(--border);
 }
 
 td {
   padding: 0.55rem 0.85rem;
   text-align: right;
-  color: #444;
-  border-bottom: 1px solid #f0f2f5;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
+}
+
+td.left {
+  color: var(--text-muted);
 }
 
 .left {
@@ -160,7 +200,7 @@ tbody tr:last-child td {
 
 .row:hover,
 .row:focus {
-  background: #f4f6f8;
+  background: var(--primary-soft);
   outline: none;
 }
 
@@ -168,31 +208,6 @@ tbody tr:last-child td {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #666;
-}
-
-.spinner {
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 3px solid #ccc;
-  border-top-color: #2c3e50;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.error {
-  color: #c0392b;
-}
-
-.error button {
-  margin-left: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  cursor: pointer;
+  color: var(--text-muted);
 }
 </style>

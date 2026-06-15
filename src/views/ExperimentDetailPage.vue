@@ -1,7 +1,30 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { experimentArchitectureUrl, getExperiment } from '@/api/client'
 import type { ExperimentDetail } from '@/api/types'
+import type { AppLocale } from '@/i18n'
+import { localizeModelName, localizeTransferSource } from '@/i18n/dataLabels'
+import { codeUrl, weightsUrl } from '@/config/links'
+
+const { t, locale } = useI18n()
+
+const transfer = (v: string) => localizeTransferSource(v, locale.value as AppLocale)
+const modelName = (v: string) => localizeModelName(v, locale.value as AppLocale)
+
+// External links for this case: architecture code repo + trained weights.
+const codeHref = computed(() =>
+  experiment.value ? codeUrl(experiment.value.model.display_name) : null,
+)
+const weightsHref = computed(() =>
+  experiment.value
+    ? weightsUrl(
+        experiment.value.model.display_name,
+        experiment.value.transfer_source,
+        experiment.value.split,
+      )
+    : null,
+)
 
 const props = defineProps<{ id: string }>()
 
@@ -18,7 +41,7 @@ async function load() {
   try {
     experiment.value = await getExperiment(Number(props.id))
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load experiment.'
+    error.value = err instanceof Error ? err.message : t('experiment.loadError')
   } finally {
     loading.value = false
   }
@@ -30,39 +53,60 @@ watch(() => props.id, load)
 </script>
 
 <template>
-  <main class="detail">
-    <RouterLink class="back" :to="{ name: 'metrics' }">← Back to metrics</RouterLink>
+  <main class="container detail">
+    <RouterLink class="back" :to="{ name: 'metrics' }">{{ t('experiment.back') }}</RouterLink>
 
     <div v-if="loading" class="status">
       <span class="spinner" aria-hidden="true"></span>
-      <span>Loading…</span>
+      <span>{{ t('common.loading') }}</span>
     </div>
 
     <p v-else-if="error" class="error">
       {{ error }}
-      <button type="button" @click="load">Retry</button>
+      <button type="button" class="btn btn-secondary btn-sm" @click="load">{{ t('common.retry') }}</button>
     </p>
 
     <template v-else-if="experiment">
-      <h1>{{ experiment.model.display_name }}</h1>
+      <h1>{{ modelName(experiment.model.display_name) }}</h1>
       <p class="setup">
-        <span>{{ experiment.transfer_source }}</span>
+        <span>{{ transfer(experiment.transfer_source) }}</span>
         <span class="sep">·</span>
         <span>{{ experiment.split }}</span>
       </p>
 
+      <div v-if="codeHref || weightsHref" class="links">
+        <a
+          v-if="weightsHref"
+          class="btn btn-primary btn-sm"
+          :href="weightsHref"
+          target="_blank"
+          rel="noopener"
+        >
+          {{ t('experiment.weightsLink') }} ↗
+        </a>
+        <a
+          v-if="codeHref"
+          class="btn btn-secondary btn-sm"
+          :href="codeHref"
+          target="_blank"
+          rel="noopener"
+        >
+          {{ t('experiment.codeLink') }} ↗
+        </a>
+      </div>
+
       <figure class="arch">
-        <p v-if="imageFailed" class="error">Couldn't load the architecture diagram.</p>
+        <p v-if="imageFailed" class="error">{{ t('experiment.imageFailed') }}</p>
         <img
           v-else
           :src="experimentArchitectureUrl(experiment.id)"
           :alt="`Architecture diagram for ${experiment.model.display_name}`"
           @error="imageFailed = true"
         />
-        <figcaption>Model architecture</figcaption>
+        <figcaption>{{ t('experiment.architecture') }}</figcaption>
       </figure>
 
-      <h2>Metrics</h2>
+      <h2>{{ t('experiment.metricsHeading') }}</h2>
       <dl class="scores">
         <div v-for="score in experiment.scores" :key="score.metric.id" class="score">
           <dt>
@@ -78,37 +122,46 @@ watch(() => props.id, load)
 
 <style scoped>
 .detail {
-  max-width: 52rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  padding-block: 2rem;
 }
 
 .back {
   display: inline-block;
   margin-bottom: 1rem;
-  color: #666;
+  color: var(--text-muted);
   text-decoration: none;
   font-weight: 600;
 }
 
 .back:hover {
-  color: #2c3e50;
+  color: var(--text);
 }
 
 h1 {
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 
 .setup {
-  color: #666;
+  color: var(--text-muted);
   font-weight: 600;
   margin-top: 0;
 }
 
 .setup .sep {
   margin: 0 0.5rem;
-  color: #ccc;
+  color: var(--border);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.links a {
+  text-decoration: none;
 }
 
 .arch {
@@ -117,20 +170,20 @@ h1 {
 
 .arch img {
   width: 100%;
-  background: #fff;
-  border: 1px solid #e3e6ea;
-  border-radius: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .arch figcaption {
   margin-top: 0.5rem;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.9rem;
   text-align: center;
 }
 
 h2 {
-  color: #2c3e50;
+  color: var(--text);
 }
 
 .scores {
@@ -139,7 +192,7 @@ h2 {
 
 .score {
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--border);
 }
 
 .score:last-child {
@@ -151,7 +204,7 @@ h2 {
   justify-content: space-between;
   gap: 1rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text);
 }
 
 .score .value {
@@ -160,7 +213,7 @@ h2 {
 
 .score dd {
   margin: 0.25rem 0 0;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -168,31 +221,6 @@ h2 {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #666;
-}
-
-.spinner {
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 3px solid #ccc;
-  border-top-color: #2c3e50;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.error {
-  color: #c0392b;
-}
-
-.error button {
-  margin-left: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  cursor: pointer;
+  color: var(--text-muted);
 }
 </style>
