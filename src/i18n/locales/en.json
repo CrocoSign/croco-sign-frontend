@@ -71,10 +71,10 @@
     "translateBtn": "Translate this segment",
     "loadError": "Failed to load segment.",
     "meta": {
-      "signerSex": "Signer sex",
+      "signerSex": "Sex",
       "signerAge": "Signer age",
       "specialCase": "Special case",
-      "speakerSide": "Speaker side",
+      "speakerSide": "Signer side",
       "videoType": "Video type",
       "videoId": "Video ID",
       "taskId": "Task ID",

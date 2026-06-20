@@ -14,6 +14,19 @@ const MODEL_NAME: LabelMap = {
   'SpaMo (modyf.)': { pl: 'SpaMo (modyf.)', en: 'SpaMo (mod.)' },
 }
 
+// The backend stores the signer's side of the frame as 'left' / 'right' (or '-'
+// for single-signer clips). Translate the directional words for Polish.
+const SPEAKER_SIDE: LabelMap = {
+  left: { pl: 'lewa', en: 'left' },
+  right: { pl: 'prawa', en: 'right' },
+}
+
+// Sex is stored as 'M' / 'F'. Polish uses 'K' (kobieta) for female; 'M' is shared.
+const SEX: LabelMap = {
+  M: { pl: 'M', en: 'M' },
+  F: { pl: 'K', en: 'F' },
+}
+
 function localize(map: LabelMap, value: string, locale: AppLocale): string {
   return map[value]?.[locale] ?? value
 }
@@ -24,4 +37,12 @@ export function localizeTransferSource(value: string, locale: AppLocale): string
 
 export function localizeModelName(value: string, locale: AppLocale): string {
   return localize(MODEL_NAME, value, locale)
+}
+
+export function localizeSpeakerSide(value: string, locale: AppLocale): string {
+  return localize(SPEAKER_SIDE, value, locale)
+}
+
+export function localizeSex(value: string, locale: AppLocale): string {
+  return localize(SEX, value, locale)
 }

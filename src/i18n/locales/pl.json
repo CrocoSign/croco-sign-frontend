@@ -71,10 +71,10 @@
     "translateBtn": "Przetłumacz ten segment",
     "loadError": "Nie udało się wczytać segmentu.",
     "meta": {
-      "signerSex": "Płeć osoby migającej",
+      "signerSex": "Płeć",
       "signerAge": "Wiek osoby migającej",
       "specialCase": "Przypadek szczególny",
-      "speakerSide": "Strona mówcy",
+      "speakerSide": "Strona osoby migającej",
       "videoType": "Typ nagrania",
       "videoId": "ID nagrania",
       "taskId": "ID zadania",

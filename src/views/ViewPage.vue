@@ -4,9 +4,13 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getSegmentFilters, listSegments } from '@/api/client'
 import type { SegmentFacets, SegmentFilters, SegmentSummary } from '@/api/types'
+import { localizeSex } from '@/i18n/dataLabels'
+import type { AppLocale } from '@/i18n'
 
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const sex = (v: string) => localizeSex(v, locale.value as AppLocale)
 
 // Open a segment's detail page.
 function openSegment(id: number) {
@@ -132,7 +136,7 @@ onUnmounted(() => {
           <div class="options">
             <label v-for="value in facets.sexes" :key="value" class="check">
               <input type="checkbox" :value="value" v-model="sexes" />
-              <span>{{ value }}</span>
+              <span>{{ sex(value) }}</span>
             </label>
           </div>
         </fieldset>
@@ -193,7 +197,7 @@ onUnmounted(() => {
             <td>{{ seg.sentence }}</td>
             <td class="col-signer">{{ seg.speaker_id }}</td>
             <td class="col-narrow">{{ seg.age }}</td>
-            <td class="col-narrow">{{ seg.sex }}</td>
+            <td class="col-narrow">{{ sex(seg.sex) }}</td>
           </tr>
 
           <!-- Skeleton placeholders during the very first load. -->

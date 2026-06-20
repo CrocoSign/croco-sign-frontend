@@ -4,11 +4,16 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getSegment, segmentVideoUrl } from '@/api/client'
 import type { SegmentDetail } from '@/api/types'
+import { localizeSex, localizeSpeakerSide } from '@/i18n/dataLabels'
+import type { AppLocale } from '@/i18n'
 
 const props = defineProps<{ id: string }>()
 
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const speakerSide = (v: string) => localizeSpeakerSide(v, locale.value as AppLocale)
+const sex = (v: string) => localizeSex(v, locale.value as AppLocale)
 
 function translateSegment() {
   if (!segment.value) return
@@ -72,7 +77,7 @@ watch(() => props.id, load)
 
       <dl class="meta">
         <dt>{{ t('segment.meta.signerSex') }}</dt>
-        <dd>{{ segment.video_metadata.signer.sex }}</dd>
+        <dd>{{ sex(segment.video_metadata.signer.sex) }}</dd>
 
         <dt>{{ t('segment.meta.signerAge') }}</dt>
         <dd>{{ segment.video_metadata.signer.age }}</dd>
@@ -81,7 +86,7 @@ watch(() => props.id, load)
         <dd>{{ segment.video_metadata.signer.special_case }}</dd>
 
         <dt>{{ t('segment.meta.speakerSide') }}</dt>
-        <dd>{{ segment.video_metadata.speaker_side }}</dd>
+        <dd>{{ speakerSide(segment.video_metadata.speaker_side) }}</dd>
 
         <dt>{{ t('segment.meta.videoType') }}</dt>
         <dd>{{ segment.video_metadata.video_type }}</dd>
