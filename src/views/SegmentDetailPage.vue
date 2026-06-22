@@ -67,6 +67,7 @@ watch(() => props.id, load)
         v-else
         class="player"
         controls
+        crossorigin="anonymous"
         :src="segmentVideoUrl(segment.id)"
         @error="videoFailed = true"
       ></video>

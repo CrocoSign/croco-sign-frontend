@@ -12,6 +12,9 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  /* The real-backend suite lives in e2e/real and runs via playwright.real.config.ts
+   * (it needs a backend on :8000). Keep it out of the default, mocked suite. */
+  testIgnore: '**/real/**',
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {

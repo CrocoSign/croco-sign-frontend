@@ -142,10 +142,10 @@ describe('TranslatePage', () => {
     const wrapper = mount(TranslatePage)
     await flushPromises()
 
-    // Turn on advanced (compare) mode.
-    await wrapper.get('input[type="checkbox"]').setValue(true)
+    // Add a second model row to compare (advanced mode = another row).
+    await wrapper.get('.add-model').trigger('click')
 
-    // Model A = alpha (default), Model B = beta (default second model).
+    // First row = alpha (default), second row = beta (first unused model).
     const selects = wrapper.findAll('select')
     await selects[0]!.setValue('alpha')
     await selects[1]!.setValue('beta')
