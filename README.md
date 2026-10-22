@@ -1,73 +1,63 @@
 # croco-sign-frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Web interface for CrocoSign, our research on translating Polish Sign Language (PJM) into text. It lets you browse the corpus clips with their reference sentences and signer metadata, compare the results of our models and view their architecture diagrams, and submit a video for translation (one model or two side by side). Built with Vue 3, TypeScript, Vite, Pinia and vue-i18n (English and Polish).
 
-## Recommended IDE Setup
+This is a research prototype, not a replacement for an interpreter.
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Where this fits
 
-## Recommended Browser Setup
+All repositories are under [github.com/crocosign](https://github.com/crocosign), project site https://crocosign.github.io:
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+CrocoSign (data preparation) -> SpaMo-PJM / Uni-Sign-PJM (training) -> pjm-models (inference) -> [croco-sign-backend](https://github.com/crocosign/croco-sign-backend) / **croco-sign-frontend** (app).
 
-## Type Support for `.vue` Imports in TS
+The frontend only talks to the backend API (models, jobs and server-sent events, segments, metrics, experiments). The public site shows this app without live translation; to translate your own video, run the stack locally.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## Requirements
 
-## Customize configuration
+Node.js `^20.19.0` or `>=22.12.0` (we used 24) and npm. A running [croco-sign-backend](https://github.com/crocosign/croco-sign-backend) for anything beyond the unit tests.
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## Run locally
 
-## Project Setup
-
-```sh
+```bash
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+The dev server listens on all interfaces, port 5173, and accepts any Host header, so it can be opened over LAN or Tailscale. Do not expose the dev server publicly; serve a production build instead.
 
-```sh
-npm run build
+### Backend address
+
+Unless configured, the app calls the backend on the same host that served the page, port 8000 (`http(s)://<page hostname>:8000`). This keeps one build working on localhost, LAN and Tailscale. If the backend is elsewhere, set `VITE_API_BASE_URL` when starting or building:
+
+```bash
+VITE_API_BASE_URL=https://api.example.org npm run dev
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+The backend must allow the page origin in `CROCO_CORS_ALLOW_ORIGINS` (it allows all origins by default).
 
-```sh
-npm run test:unit
-```
+## Build and test
 
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
-
-```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
-npm run build
-
-# Runs the end-to-end tests
-npm run test:e2e
-# Runs the tests only on Chromium
-npm run test:e2e -- --project=chromium
-# Runs the tests of a specific file
-npm run test:e2e -- tests/example.spec.ts
-# Runs the tests in debug mode
-npm run test:e2e -- --debug
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
+```bash
+npm run build           # type-check and production build
+npm run preview         # serve the build (port 4173)
+npm run test:unit       # Vitest
 npm run lint
+npm run test:e2e        # Playwright with mocked API
+npx playwright install  # once, to get browsers
+npm run test:e2e:real   # Playwright against a real backend on :8000
 ```
+
+`npm run build` type-checks and `npm run test:unit` runs the unit tests. `test:e2e:real` needs the backend running with Redis, the worker and a DeepL key; it translates with the backend's `mock` model, so no GPU is needed, but it streams a real clip from Hugging Face.
+
+## Notes
+
+- Translation results come from the models in [pjm-models](https://github.com/crocosign/pjm-models); on signers never seen in training (the SI split) they are weak, so do not rely on the output.
+- Interface strings live in `src/i18n`; add a locale there.
+
+## License
+
+Our code is under the MIT licence (see `LICENSE`). The corpus clips shown in the app come from the Open Repository of the PJM Corpus (University of Warsaw), which is non-commercial only.
+
+## Authors
+
+Wojciech Sieńko and Rostyslav Kovalenko, PJATK engineering thesis, supervised by dr Albert Śledzianowski, MBA.
