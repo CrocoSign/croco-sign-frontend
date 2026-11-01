@@ -10,12 +10,12 @@
 // a folder name differs.
 
 const CODE_REPO: Record<string, string> = {
-  SpaMo: 'https://github.com/croco-corp/spaMo-PJM',
-  'SpaMo (modyf.)': 'https://github.com/croco-corp/spaMo-PJM',
-  'Uni-Sign': 'https://github.com/croco-corp/Uni-Sign-PJM',
+  SpaMo: 'https://github.com/CrocoSign/SpaMo-PJM',
+  'SpaMo (modyf.)': 'https://github.com/CrocoSign/SpaMo-PJM',
+  'Uni-Sign': 'https://github.com/CrocoSign/Uni-Sign-PJM',
 }
 
-const WEIGHTS_BASE = 'https://huggingface.co/croco-corp/pjm-models/tree/main'
+const WEIGHTS_BASE = 'https://huggingface.co/CrocoSign/pjm-models/tree/main'
 
 const FAMILY: Record<string, string> = {
   SpaMo: 'spamo',

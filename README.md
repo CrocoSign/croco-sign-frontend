@@ -56,8 +56,8 @@ npm run test:e2e:real   # Playwright against a real backend on :8000
 
 ## License
 
-Our code is under the MIT licence (see `LICENSE`). The corpus clips shown in the app come from the Open Repository of the PJM Corpus (University of Warsaw), which is non-commercial only.
+Our code is under the MIT licence (see `LICENSE`). The corpus clips shown in the app come from the Open Repository of the PJM Corpus (University of Warsaw), licensed under CC BY-SA 4.0.
 
 ## Authors
 
-Wojciech Sieńko and Rostyslav Kovalenko, PJATK engineering thesis, supervised by dr Albert Śledzianowski, MBA.
+[Wojciech Sieńko](https://www.linkedin.com/in/wojciech-sie%C5%84ko/) and [Rostyslav Kovalenko](https://www.linkedin.com/in/rost-koff/), PJATK engineering thesis, supervised by dr Albert Śledzianowski, MBA.
