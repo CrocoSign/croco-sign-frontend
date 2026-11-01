@@ -91,9 +91,9 @@ describe('ExperimentDetailPage', () => {
     const links = wrapper.findAll('.links a')
     expect(links).toHaveLength(2)
     const hrefs = links.map((a) => a.attributes('href'))
-    expect(hrefs).toContain('https://github.com/croco-corp/spaMo-PJM')
+    expect(hrefs).toContain('https://github.com/CrocoSign/SpaMo-PJM')
     expect(hrefs).toContain(
-      'https://huggingface.co/croco-corp/pjm-models/tree/main/spamo/mod-spamo-pjm-scratch-ms',
+      'https://huggingface.co/CrocoSign/pjm-models/tree/main/spamo/mod-spamo-pjm-scratch-ms',
     )
     expect(links[0]!.attributes('target')).toBe('_blank')
     expect(links[0]!.attributes('rel')).toBe('noopener')
